@@ -1,3 +1,9 @@
+export interface apiResponse {
+    headers: string,
+    statusCode: number,
+    data: object;
+};
+
 export interface apiRequest {
     path?: string,
     method?: string,
@@ -9,8 +15,8 @@ export interface apiRequest {
 export interface standardApiRequest {
     path?: string,
     method?: string,
-    pathParams?: string,
-    queryParams?: string,
+    pathParams?: any,
+    queryParams?: any,
     body?: any
 }
 

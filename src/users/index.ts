@@ -1,9 +1,9 @@
-// import makeDb from '../db';
-// import makeUserRepository from './users-repository';
+import makeDb from '../db';
+import makeUserRepository from './users-repository';
 import makeUserEndPointHandler from './users-handler';
 
-// const database = makeDb();
-// const userRepository =  makeUserRepository({ database });
-const userEndPointHandler = makeUserEndPointHandler();
+const pool = makeDb();
+const userRepository =  makeUserRepository({ pool });
+const userEndPointHandler = makeUserEndPointHandler({ userRepository });
 
 export default userEndPointHandler;

@@ -1,15 +1,23 @@
+import { Pool } from "mysql2/promise";
 
-const makeUserRepository: any = ({ database }: { database: any }) => {
-    // return Object.freeze({
-    //     get
-    // });
+const makeUserRepository = ({ pool }: { pool: Pool }) => {
+    const getUsers = async () => {
+      return await pool.query('SELECT * FROM users');
+    }
 
-    // async function get () {
-    //     const db = database;
-    //     console.log(db);
-    //     return 'usuario';
-        
-    // }
+    const getUserById = async ({ userId }: {userId: string }) => {
+      return await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+    }
+
+    async function addUser () {
+      return await pool.query('INSERT INTO users (email,user_password) VALUES ("gus@melitel.es", "12345")');
+    }
+
+    return Object.freeze({
+      getUsers,
+      getUserById,
+      addUser
+    });
 }
 
 export default makeUserRepository;

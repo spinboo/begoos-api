@@ -1,24 +1,22 @@
 import express from 'express';
 import bodyParser from 'body-parser'
-import handleUsersRequest from './users';
-import adaptRequest from './helpers/adapt-request';
+import morgan from 'morgan';
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
+import usersRouter from './users';
+
+// Set up
 const app = express();
+
+// Middlewares
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-app.all('/users', userHandler)
-app.get('/users/:id', userHandler);
+// user routes
+app.use('/api/users', usersRouter);
 
-function userHandler (req: any, res: any) {
-  const httpRequest = adaptRequest(req);
-  handleUsersRequest(httpRequest)
-    .then( (response: any) => 
-      res
-        .set(response.headers)
-        .status(response.statusCode)
-        .send(response.data)
-    )
-    .catch(e => res.status(500).end());   
-}
+
 
 app.listen(3000, () => console.log('Listening on port 3000'));

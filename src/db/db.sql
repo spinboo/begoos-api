@@ -4,14 +4,17 @@ USE begoos;
 
 CREATE TABLE users(
     id INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     user_password VARCHAR(128) NOT NULL,
     given_name VARCHAR(50) NULL,
     surname VARCHAR(50) NULL,
     document_type VARCHAR(50) NULL,
     document_id VARCHAR(50) NULL,
     phone VARCHAR(15) NULL,
-    mobile_phone VARCHAR(15) NULL
+    mobile_phone VARCHAR(15) NULL,
+    avatar VARCHAR(255),
+    signup_date DATE DEFAULT current_timestamp,
+    last_login DATE
 );
 
 CREATE TABLE organizations(

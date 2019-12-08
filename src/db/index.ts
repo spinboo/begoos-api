@@ -13,8 +13,4 @@ const makeDb = () => {
   return pool;
 }
 
-const pool = makeDb();
-const insertUser = async (pool: mysql.Pool) => await pool.query('SELECT * from users');
-const result = insertUser(pool);
-
 export default makeDb;

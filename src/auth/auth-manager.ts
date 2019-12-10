@@ -1,20 +1,19 @@
 import { standardApiRequest } from "../helpers/adapt-request"
 import makeHttpError from '../helpers/http-error';
-import { logicalExpression } from "@babel/types";
 
 // import jwt from 'jsonwebtoken';
 // import moment from 'moment';
 // import fs from 'fs';
 
 
-const makeAuthManager = () => {
+const makeAuthManager = ({ userRepository }: any) => {
   return async function authManager(httpRequest: standardApiRequest) {
     switch (httpRequest.path) {
       case '/login':
         return login(httpRequest);
 
-      case '/singup':
-        return signup(httpRequest);
+      case '/register':
+        return register(httpRequest);
     }
   }
 
@@ -39,8 +38,49 @@ const makeAuthManager = () => {
     }
   }
 
-  async function signup(httpRequest: standardApiRequest) {
-    // TODO funcion de registro de usuario
+  async function register(httpRequest: standardApiRequest) {
+    let userInfo = httpRequest.body;
+    if(!userInfo) {
+      return makeHttpError({
+        statusCode: 400,
+        errorMessage: 'Bad request. No POST body.'
+      })
+    }
+
+    if(typeof httpRequest.body === 'string') {
+      try {
+        userInfo = JSON.parse(userInfo);
+      }
+      catch {
+        return makeHttpError({
+          statusCode: 400,
+          errorMessage: 'Bad request. POST body must be valid JSON'
+        });
+      }
+    }
+
+    try {
+      const doesUserExist = await userRepository.findByEmail(userInfo.email);
+      console.log(doesUserExist);
+      const result = {
+        id: 1,
+        message: 'hello'
+      };
+
+      return {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        statusCode: 201,
+        data: JSON.stringify(result)
+      }
+    }
+    catch (e) {
+      return makeHttpError({
+        statusCode: 400,
+        errorMessage: 'Bad request. POST body must be valid JSON'
+      })
+    }
   }
 }
 

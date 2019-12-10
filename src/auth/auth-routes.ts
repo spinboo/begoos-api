@@ -6,7 +6,7 @@ const makeAuthRoutes = ({ authHandler }: any) => {
   authRoutes.route('/login')
     .post(authHandler);
 
-  authRoutes.route('/signup')
+  authRoutes.route('/register')
     .post(authHandler);
 
   return authRoutes;

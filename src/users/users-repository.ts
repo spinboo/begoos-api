@@ -1,4 +1,4 @@
-import { Pool } from "mysql2/promise";
+import { Pool } from 'mysql2/promise';
 
 const makeUserRepository = ({ pool }: { pool: Pool }) => {
     const get = async () => {

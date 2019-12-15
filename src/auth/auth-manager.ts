@@ -1,12 +1,13 @@
 import { standardApiRequest } from "../helpers/adapt-request"
 import makeHttpError from '../helpers/http-error';
+import bcrypt from 'bcrypt';
 
 // import jwt from 'jsonwebtoken';
 // import moment from 'moment';
 // import fs from 'fs';
 
 
-const makeAuthManager = ({ userRepository }: any) => {
+const makeAuthManager = ({ authRepository }: any) => {
   return async function authManager(httpRequest: standardApiRequest) {
     switch (httpRequest.path) {
       case '/login':
@@ -40,6 +41,7 @@ const makeAuthManager = ({ userRepository }: any) => {
 
   async function register(httpRequest: standardApiRequest) {
     let userInfo = httpRequest.body;
+
     if(!userInfo) {
       return makeHttpError({
         statusCode: 400,
@@ -54,18 +56,45 @@ const makeAuthManager = ({ userRepository }: any) => {
       catch {
         return makeHttpError({
           statusCode: 400,
-          errorMessage: 'Bad request. POST body must be valid JSON'
+          errorMessage: 'Bad request. POST body must be valid JSON and not STRING'
         });
       }
     }
 
     try {
-      const doesUserExist = await userRepository.findByEmail(userInfo.email);
-      console.log(doesUserExist);
-      const result = {
-        id: 1,
-        message: 'hello'
-      };
+      const result = await authRepository.findByEmail(userInfo.email)[0];
+
+      if(result && result.length === 0 ) {
+        throw 'User exists already';
+      }
+      else {
+        console.log('The user is being created');
+        const encryptedPassword = await bcrypt.hash(userInfo.password, 10);
+        const user = {
+          email: userInfo.email,
+          password: encryptedPassword
+        };
+        try {
+          const result = await authRepository.add(user);
+          return {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            statusCode: 201,
+            data: JSON.stringify(result)
+          }
+        } catch (e) {
+          return makeHttpError({
+            statusCode: 400,
+            errorMessage: 'Bad request. POST body must be valid JSON'
+          });
+        }
+      }
+      
+      // const result = {
+      //   id: 1,
+      //   message: 'hello'
+      // };
 
       return {
         headers: {

@@ -13,8 +13,8 @@ CREATE TABLE users(
     phone VARCHAR(15) NULL,
     mobile_phone VARCHAR(15) NULL,
     avatar VARCHAR(255),
-    signup_date DATE DEFAULT current_timestamp,
-    last_login DATE
+    signup_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE organizations(

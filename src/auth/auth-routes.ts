@@ -3,10 +3,10 @@ import express from 'express';
 const makeAuthRoutes = ({ authHandler }: any) => {
   const authRoutes = express.Router();
 
-  authRoutes.route('/login')
+  authRoutes.route('/signin')
     .post(authHandler);
 
-  authRoutes.route('/register')
+  authRoutes.route('/signup')
     .post(authHandler);
 
   return authRoutes;

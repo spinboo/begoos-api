@@ -1,29 +1,29 @@
-import { standardApiRequest } from '../helpers/adapt-request'; 
+import { standardApiRequest } from '../helpers/adapt-request';
 import makeHttpError from '../helpers/http-error';
 
- // TODO create and import getUsers, createUser and makeHttpError functions
+// TODO create and import getUsers, createUser and makeHttpError functions
 
 const makeUsersManager = ({ userRepository }: any) => {
-  return async function userManager (httpRequest: standardApiRequest) {
+  return async function userManager(httpRequest: standardApiRequest) {
     switch (httpRequest.method) {
       case 'GET':
         return getUsers(httpRequest);
 
-      case 'POST': 
+      case 'POST':
         return createUser(httpRequest);
-      
+
       case 'DELETE':
         return removeUser(httpRequest);
-          
+
       default:
         return makeHttpError({
           statusCode: 405,
-          errorMessage:  `${httpRequest.method} method not allowed.`
+          errorMessage: `${httpRequest.method} method not allowed.`
         });
-      }
+    }
   }
 
-  async function getUsers (httpRequest: standardApiRequest) {
+  async function getUsers(httpRequest: standardApiRequest) {
     const { id } = httpRequest.pathParams || {};
     try {
       const result = id
@@ -34,18 +34,16 @@ const makeUsersManager = ({ userRepository }: any) => {
           'Content-Type': 'application/json'
         },
         name: 'users',
-        statusCode:200,
+        statusCode: 200,
         data: JSON.stringify(result[0])
       };
     }
-    catch(e) {
+    catch (e) {
       console.log(e);
     }
-
-    
   }
 
-  async function createUser (httpRequest: standardApiRequest) {
+  async function createUser(httpRequest: standardApiRequest) {
     let userInfo = httpRequest.body;
     if (!userInfo) {
       return makeHttpError({
@@ -57,7 +55,7 @@ const makeUsersManager = ({ userRepository }: any) => {
     if (typeof httpRequest.body === 'string') {
       try {
         userInfo = JSON.parse(userInfo);
-      } 
+      }
       catch {
         return makeHttpError({
           statusCode: 400,
@@ -65,18 +63,18 @@ const makeUsersManager = ({ userRepository }: any) => {
         });
       }
     }
-      
+
     try {
       // const user = makeUser(userInfo);
       const result = await userRepository.add(userInfo);
       return {
         headers: {
-            'Content-Type': 'application/json'
+          'Content-Type': 'application/json'
         },
         statusCode: 201,
         data: JSON.stringify(result)
       }
-    } 
+    }
     catch (e) {
       return makeHttpError({
         statusCode: 400,
@@ -99,12 +97,12 @@ const makeUsersManager = ({ userRepository }: any) => {
 
       return {
         headers: {
-            'Content-Type': 'application/json'
+          'Content-Type': 'application/json'
         },
         statusCode: 200,
         data: JSON.stringify(result)
       }
-    } 
+    }
     catch (e) {
       return makeHttpError({
         statusCode: 400,
@@ -113,7 +111,7 @@ const makeUsersManager = ({ userRepository }: any) => {
     }
   }
 
-  
+
 }
 
 export default makeUsersManager;

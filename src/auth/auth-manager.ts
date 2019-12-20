@@ -1,55 +1,33 @@
 import { standardApiRequest } from "../helpers/adapt-request"
 import makeHttpError from '../helpers/http-error';
 import bcrypt from 'bcrypt';
-
-// import jwt from 'jsonwebtoken';
-// import moment from 'moment';
-// import fs from 'fs';
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import moment from 'moment';
 
 
 const makeAuthManager = ({ authRepository }: any) => {
   return async function authManager(httpRequest: standardApiRequest) {
     switch (httpRequest.path) {
-      case '/login':
+      case '/signin':
         return login(httpRequest);
 
-      case '/register':
+      case '/signup':
         return register(httpRequest);
     }
   }
 
   async function login(httpRequest: standardApiRequest) {
-    // TODO funcion de login de usuario
-    try {
-      const result = {
-        token: 'este es tu token',
-        user: 'dan'
-      }
-      return {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        name: 'login',
-        statusCode: 200,
-        data: JSON.stringify(result)
-      };
-    }
-    catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function register(httpRequest: standardApiRequest) {
     let userInfo = httpRequest.body;
 
-    if(!userInfo) {
+    if (!userInfo) {
       return makeHttpError({
         statusCode: 400,
         errorMessage: 'Bad request. No POST body.'
       })
     }
 
-    if(typeof httpRequest.body === 'string') {
+    if (typeof httpRequest.body === 'string') {
       try {
         userInfo = JSON.parse(userInfo);
       }
@@ -62,9 +40,90 @@ const makeAuthManager = ({ authRepository }: any) => {
     }
 
     try {
-      const result = await authRepository.findByEmail(userInfo.email)[0];
+      const [user] = await authRepository.findByEmail(userInfo.email);
+      const privateKey = fs.readFileSync('src/auth/private.key', 'utf8');
 
-      if(result && result.length === 0 ) {
+      if (user && user.length !== 0) {
+        const arePasswordsEqual = await bcrypt.compare(userInfo.password, user[0].user_password);
+
+        if (arePasswordsEqual) {
+          const signOptions = {
+            issuer: 'Spinboo',
+            subject: user[0].email,
+            audience: 'http://www.begoos.com',
+            expiresIn: moment().add(14, 'days').unix(),
+            algorithm: "RS256"
+          };
+
+          const payload = {
+            email: user[0].email
+          }
+
+          const token = jwt.sign(payload, privateKey, signOptions);
+
+          return {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            name: 'login',
+            statusCode: 200,
+            data: JSON.stringify(token)
+          };
+        } else {
+          return {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            name: 'login',
+            statusCode: 401,
+            data: JSON.stringify('User unauthorized')
+          };
+        }
+      } else {
+        return {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          name: 'login',
+          statusCode: 401,
+          data: JSON.stringify('User does not exist or is wrong')
+        };
+      }
+    }
+    catch (errorMessage) {
+      return makeHttpError({
+        statusCode: 400,
+        errorMessage
+      })
+    }
+  }
+
+  async function register(httpRequest: standardApiRequest) {
+    let userInfo = httpRequest.body;
+
+    if (!userInfo) {
+      return makeHttpError({
+        statusCode: 400,
+        errorMessage: 'Bad request. No POST body.'
+      })
+    }
+
+    if (typeof httpRequest.body === 'string') {
+      try {
+        userInfo = JSON.parse(userInfo);
+      }
+      catch {
+        return makeHttpError({
+          statusCode: 400,
+          errorMessage: 'Bad request. POST body must be valid JSON and not STRING'
+        });
+      }
+    }
+
+    try {
+      const doesUserAlreadyExist = await authRepository.findByEmail(userInfo.email);
+
+      if (doesUserAlreadyExist && doesUserAlreadyExist[0].length !== 0) {
         throw 'User exists already';
       }
       else {
@@ -81,68 +140,23 @@ const makeAuthManager = ({ authRepository }: any) => {
               'Content-Type': 'application/json'
             },
             statusCode: 201,
-            data: JSON.stringify(result)
+            data: JSON.stringify('User has been created')
           }
-        } catch (e) {
+        } catch (errorMessage) {
           return makeHttpError({
             statusCode: 400,
-            errorMessage: 'Bad request. POST body must be valid JSON'
+            errorMessage
           });
         }
       }
-      
-      // const result = {
-      //   id: 1,
-      //   message: 'hello'
-      // };
-
-      return {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        statusCode: 201,
-        data: JSON.stringify(result)
-      }
     }
-    catch (e) {
+    catch (errorMessage) {
       return makeHttpError({
         statusCode: 400,
-        errorMessage: 'Bad request. POST body must be valid JSON'
+        errorMessage
       })
     }
   }
 }
 
 export default makeAuthManager;
-
-
-
-// const privateKey = fs.readFileSync('./private.key', 'utf8');
-// const publicKey = fs.readFileSync('./public.key', 'utf8');
-
-// export const createToken = (user: any) => {
-//   const payload = {
-//     sub: user.id,
-//     iat: moment().unix(),
-//     exp: moment().add(14, 'days').unix()
-//   }
-
-//   return jwt.sign(payload, privateKey)
-// }
-
-// export const isAuth = (req, res, next) => {
-//   if (!req.headers.authorization) {
-//     return res.status(403).send({ message: 'Do not have authorization' });
-//   }
-
-//   const token = req.headers.authorization.split("")[1];
-
-//   const payload = jwt.verify(token, publicKey);
-
-//   if (payload.exp <= moment().unix()) {
-//     return res.status(401).send({ message: 'Token has expired' });
-//   }
-
-//   req.user = payload.sub
-//   next()
-// }

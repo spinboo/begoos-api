@@ -4,7 +4,7 @@ const makeDb = () => {
   const config = {
     host: 'localhost',
     user: 'root',
-    password: 'Begoos$76',
+    password: 'Spinboo80',
     database: 'begoos',
   };
 
